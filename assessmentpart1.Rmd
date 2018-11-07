@@ -1,0 +1,57 @@
+---
+title: "R Notebook"
+output:
+  html_document:
+    df_print: paged
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+library(tidyverse)
+library(maptools)
+library(RColorBrewer)
+library(classInt)
+library(sp)
+library(rgeos)
+library(tmap)
+library(tmaptools)
+library(sf)
+library(rgdal)
+library(geojsonio)
+LondonData <- read_csv("https://files.datapress.com/london/dataset/ward-profiles-and-atlas/2015-09-24T14:21:24/ward-profiles-excel-version.csv", na = "n/a")
+LondonBoroughs<-LondonData[626:658,]
+LondonData <- data.frame(LondonData)
+LondonBoroughs <- LondonData[grep("^E09",LondonData[,3]),]
+LondonBoroughs <- LondonBoroughs[2:34,]
+LondonBoroughs<-LondonBoroughs[,c(1,19,20,21)]
+names(LondonBoroughs)[1] <- c("Borough Name")
+library(plotly)
+EW <- geojson_read("http://geoportal.statistics.gov.uk/datasets/8edafbe3276d4b56aec60991cbddda50_2.geojson", what = "sp")
+LondonMap <- EW[grep("^E09",EW@data$lad15cd),]
+BoroughMapSF <- read_shape("C:/Users/Messi-Lu/Desktop/tianmingcao/LondonBorough/LondonBouroughs.shp", as.sf = TRUE)
+BoroughMapSP <- LondonMap
+library(methods)
+newSF <- st_as_sf(BoroughMapSP)
+newSP <- as(newSF, "Spatial")
+BoroughMapSP <- as(BoroughMapSF, "Spatial")
+BoroughMapSP@data <- data.frame(BoroughMapSP@data,LondonData[match(BoroughMapSP@data[,"code"],LondonData[,"New.code"]),])
+BoroughDataMap <- append_data(BoroughMapSF,LondonData, key.shp = "code", key.data = "New.code", ignore.duplicates = TRUE)
+tmap_mode("plot")
+tm_shape(BoroughDataMap) +
+  tm_polygons(c("Male.life.expectancy..2009.13", "Female.life.expectancy..2009.13"), 
+              style=c("jenks", "pretty"),
+              palette=list("Greens", "Blues"),
+              auto.palette.mapping=FALSE,
+              title=c("Male Life Expectancy 2009", "Female Life Expectancy 2009"))
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+
+![Arcmap](C:/Users/Messi-Lu/Desktop/tianmingcao/Tianming Cao.jpg)
